@@ -21,7 +21,12 @@ const App = () => {
   });
 
   return (
-    <div style={{ backgroundColor: "white" }}>
+    <div
+      style={{
+        backgroundImage:
+          "linear-gradient(to left top, #f28c1e, #ff7752, #ff6885, #ff6cb9, #f17ee8)",
+      }}
+    >
       <div className={classes.logoContainer}>
         <img
           src={logo}
@@ -31,7 +36,7 @@ const App = () => {
             borderRadius: "50%",
             marginTop: "10px",
             background: "#5E31A7",
-            border: "solid royalblue",
+            border: "none",
           }}
         />
       </div>

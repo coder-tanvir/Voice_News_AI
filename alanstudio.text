@@ -1,0 +1,131 @@
+//Some command about the application itself
+
+intent('What is this app',
+       reply('This is a news project'));
+intent('What can this application do?','What are the features of this application?',
+       reply('This application Gets news from News A.p.i. You can search by headlines, categories, term adn source. The Ai voice can read all the headlines for U.'))
+intent('Tell me about the technology used in this application','How can u hear my command','What is this Artificial intelligence?',
+       reply('This application uses ALAN AI as voice artificial intelligence component to read the words and shows results based on that'));
+
+//API key of the news APi
+const apikey='4dbe5cb51e35409aa7b481a7f4b1cf91';
+let savedarticles=[];
+
+///Searching by category,source,headline
+//News by source
+intent('Give me the news from $(source* (.*))',(p)=>{
+    let News_api=`https://newsapi.org/v2/top-headlines?apikey=${apikey}`;
+    
+    if(p.source.value && p.source.value!='yes'){
+        News_api=`${News_api}&sources=${p.source.value.toLowerCase().split(" ").join('-')}`;
+    }
+    api.request(News_api,(error,response,body)=>{
+        const {articles}=JSON.parse(body);
+        if(!articles.length){
+            p.play('Try a different source');
+            return;
+        }
+        savedarticles=articles;
+        p.play('Got The Headlines from New A.P.I');
+        p.play({ command:'newheadlines',articles});
+        p.play(`here are the (lates|recent) ${p.source.value}.`);
+        p.play('Should I read them one by one?');
+        p.then(play);
+        
+        
+    });
+
+
+})
+
+
+
+//News By Term
+intent('what\'s up with $(term* (.*))','What\'s going on with $(term* (.*))',(p)=>{
+    let News_api=`https://newsapi.org/v2/everything?apikey=${apikey}`;
+    
+    if(p.term.value && p.term.value!='yes'){
+        News_api=`${News_api}&q=${p.term.value}`;
+    }
+    api.request(News_api,(error,response,body)=>{
+        const {articles}=JSON.parse(body);
+        if(!articles.length){
+            p.play('Try a different term');
+            return;
+        }
+        savedarticles=articles;
+        
+        p.play({ command:'newheadlines',articles});
+        p.play(`here are the (latest|recent) articles on ${p.term.value}.`);
+        p.play('Should I read them one by one?');
+        p.then(play);
+        
+    });
+
+})
+
+//News By Category
+const CATEGORIES = ['business', 'entertainment', 'general', 'health', 'science', 'sports', 'technology'];
+const CATEGORIES_INTENT = `${CATEGORIES.map((category) => `${category}~${category}`).join('|')}`;
+
+intent(`(show|what is|tell me|what's|what are|what're|read) (the|) (recent|latest|) $(N news|headlines) (in|about|on|) $(C~ ${CATEGORIES_INTENT})`,
+  `(read|show|get|bring me|give me) (the|) (recent|latest) $(C~ ${CATEGORIES_INTENT}) $(N news|headlines)`, (p) => {
+  
+
+    let News_api=`https://newsapi.org/v2/top-headlines?apikey=${apikey}`;
+    
+    if(p.C.value){
+        News_api=`${News_api}&category=${p.C.value}`;
+    }
+    api.request(News_api,(error,response,body)=>{
+        const {articles}=JSON.parse(body);
+        if(!articles.length){
+            p.play('Try a different category');
+            return;
+        }
+        savedarticles=articles;
+        
+        p.play({ command:'newheadlines',articles});
+        p.play(`here are the (latest|recent) articles By category on ${p.C.value}.`);
+       p.play('Should I read them one by one?');
+       p.then(play); 
+    });
+
+})
+//Latest headlines
+intent('Give me the Latest headlines','Give me the latest news',(p)=>{
+    let News_api=`https://newsapi.org/v2/top-headlines?apikey=${apikey}&country=us`;
+    api.request(News_api,(error,response,body)=>{
+        const {articles}=JSON.parse(body);
+        if(!articles.length){
+            p.play('Try something else');
+            return;
+        }
+        savedarticles=articles;
+        p.play({command:'newheadlines',articles});
+        p.play('Here are some Headlines based on the country United states of america');
+        p.play('Should I read them one by one?');
+        p.then(play);
+    })
+ 
+    
+})
+
+///This function makes the alan AI read all the headlines
+const play=context(()=>{
+    intent('yes',async(p)=>{
+        for(let i=0;i<savedarticles.length;i++){
+            p.play({command:'play highlights',articles:savedarticles[i]});
+            p.play(`${savedarticles[i].title}`)
+            
+        }
+        p.play('That is all I have for now!')
+        
+    })
+        intent('no',async(p)=>{
+        p.play('Okay, Next time');
+    })
+
+})
+
+
